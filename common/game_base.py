@@ -5,6 +5,7 @@ class GameBase:
     
     BORDER_H = 28
     BORDER_W = 28
+    BACKGROUND_COLOR = (0, 0, 0)
     BORDER_COLOR = (100, 0, 0)
     SCORE_COLOR = (255, 255, 255)
 
@@ -14,6 +15,22 @@ class GameBase:
     _screen_width = None
     _score = None
     _best_score = None
+
+    @property
+    def maxRight(self) -> int:
+        return self._screen_width - self.BORDER_W
+    
+    @property
+    def maxLeft(self) -> int:
+        return self.BORDER_W
+    
+    @property
+    def maxTop(self) -> int:
+         return self.BORDER_H
+    
+    @property
+    def maxBottom(self) -> int:
+        return self._screen_height - self.BORDER_H
 
     def __init__(self, name): 
         self._name = name
@@ -27,6 +44,7 @@ class GameBase:
         self._screen_width = screen_info.current_w
         self._screen_height = screen_info.current_h
         self._screen = pygame.display.set_mode((self._screen_width, self._screen_height), pygame.FULLSCREEN)
+        self._screen.fill(self.BACKGROUND_COLOR)
         pygame.display.set_caption(self._name)
     
     def _create_border(self):
