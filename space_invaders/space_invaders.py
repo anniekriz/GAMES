@@ -10,12 +10,15 @@ import weakref
 
 class SpaceInvaders(GameBase):
     _spaceship = None
+    _invader = None
 
     def __init__(self):
         super().__init__("Space Invaders")
         pygame.key.set_repeat(1, 1)
         self._spaceship = Spaceship(self._screen, self.BACKGROUND_COLOR)
         self._spaceship.draw(692, 850)
+        self._invader = Invader(self._screen, self.BACKGROUND_COLOR)
+        self._invader.draw(692, 100)
         self._handleEvents()
     
     def _moveSpaceshipRight(self):
@@ -63,8 +66,7 @@ def _onTimerElapsed(s):
     s._timer = threading.Timer(0.1, _onTimerElapsed, [s])
     s._timer.start()
 
-
-class Spaceship():
+class SpaceshipBase():
 
     _screen = None
     _x = None
@@ -73,9 +75,10 @@ class Spaceship():
     _sy = None
     _backgroundColor = None
     _shot = None
-    _size = 90
-    _color = (51, 3, 231)
-    _shotColor = (255, 248, 14)
+    _size = None
+    _color = None
+    _shotColor = None
+    
 
     @property
     def position(self) -> Tuple[int, int]:
@@ -85,9 +88,12 @@ class Spaceship():
     def size(self) -> int:
         return self._size
 
-    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
+    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, size: int, color: pygame.Color, shotColor: pygame.Color):
         self._screen = screen
         self._backgroundColor = backgroundColor
+        self._size = size
+        self._color = color
+        self._shotColor = shotColor
 
     
     def draw(self, x: int, y: int):
@@ -124,6 +130,8 @@ class Spaceship():
         y = self._y - self._size
         return (x, y)
     
+   
+
     class Shot():
 
         _timer = None
@@ -145,8 +153,6 @@ class Spaceship():
             self._timer = threading.Timer(0.1, _onTimerElapsed, [self])
             self._timer.start()
 
-
-
             
         def _drawShot(self):
             rect = self._calculateShotCoordinates()
@@ -165,8 +171,6 @@ class Spaceship():
             self._timer.cancel()
             self._drawShot()
             
-            
-            
 
         def _drawShotBy(self, dx: int, dy: int):
             if self._sx != None and self._sy != None:
@@ -177,7 +181,23 @@ class Spaceship():
             pygame.display.flip()
 
 
+class Spaceship(SpaceshipBase):
+    SIZE = 90
+    COLOR = (51, 3, 231)
+    SHOT_COLOR = (255, 248, 14)
 
+    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
+        super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR)
+
+class Invader(SpaceshipBase):
+    SIZE = 70
+    COLOR = (0, 128, 0)
+    SHOT_COLOR = (255, 248, 14)
+
+    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
+        super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR)
+                  
+    
 
 
 pygame.init()
