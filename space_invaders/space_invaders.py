@@ -26,14 +26,13 @@ class SpaceInvaders(GameBase):
     _spaceship = None
     _invader = None
     _invaderSpot = None
-    _t = None
 
     def __init__(self):
         super().__init__("Space Invaders")
         pygame.key.set_repeat(100, 10)
-        self._spaceship = Spaceship(self._screen, self.BACKGROUND_COLOR)
+        self._spaceship = Spaceship(self._screen, self.BACKGROUND_COLOR, self.BORDER_H)
         self._spaceship.draw(692, 850)
-        self._invader = Invader(self._screen, self.BACKGROUND_COLOR)
+        self._invader = Invader(self._screen, self.BACKGROUND_COLOR, self.BORDER_H)
         self._setInvaderSpot()
         self._invader.draw(self._invaderSpot, 70)
         self._handleEvents()
@@ -95,6 +94,7 @@ class SpaceshipBase():
     _color = None
     _shotColor = None
     _timer = None
+    _screenBorder_H = None
     
 
     @property
@@ -105,12 +105,13 @@ class SpaceshipBase():
     def size(self) -> int:
         return self._size
 
-    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, size: int, color: pygame.Color, shotColor: pygame.Color):
+    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, size: int, color: pygame.Color, shotColor: pygame.Color, screenBorder_H: int):
         self._screen = screen
         self._backgroundColor = backgroundColor
         self._size = size
         self._color = color
         self._shotColor = shotColor
+        self._screenBorder_H = screenBorder_H
 
     
     def draw(self, x: int, y: int):
@@ -128,7 +129,7 @@ class SpaceshipBase():
         self.draw(self._x + dx, self._y + dy)
 
     def shoot(self):
-        self._shot = Spaceship.Shot(self._screen, self._backgroundColor, self._shotColor)
+        self._shot = Spaceship.Shot(self._screen, self._backgroundColor, self._shotColor, self._screenBorder_H)
         shotPos = self._calculateShotPosition()
         self._shot.draw(shotPos[0], shotPos[1])
 
@@ -159,12 +160,16 @@ class SpaceshipBase():
         _color = None
         _x = None
         _y = None
+        _shot_H = 20
+        _shot_W = 5
+        _screenBorder_H = None
 
 
-        def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, color: pygame.Color):
+        def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, color: pygame.Color, screenBorder_H: int):
             self._screen = screen
             self._backgroundColor = backgroundColor
             self._color = color
+            self._screenBorder_H = screenBorder_H
         
         
         
@@ -176,14 +181,18 @@ class SpaceshipBase():
 
             
         def _drawShot(self):
-            rect = self._calculateShotCoordinates()
+            rect = self._getShotCoordinates()
             pygame.draw.rect(self._screen, self._color, rect)
             pygame.display.flip()
 
+        def _eraseShot(self):
+            rect = self._getShotCoordinates()
+            pygame.draw.rect(self._screen, self._backgroundColor, rect)
+            pygame.display.flip()
 
-        def _calculateShotCoordinates(self) -> Tuple[int, int, int, int]:
-            w = 5
-            h = 20
+        def _getShotCoordinates(self) -> Tuple[int, int, int, int]:
+            w = self._shot_W
+            h = self._shot_H
             x = self._x - w/2
             y = self._y
             return (x, y, w, h)
@@ -192,16 +201,19 @@ class SpaceshipBase():
             self._drawShotBy(0,-20)
             if self._timer != None:
                 self._timer.cancel()
-            self._timer = threading.Timer(0.01, self._onTimerElapsed)
-            self._timer.start()
+            if self._y > self._screenBorder_H + self._shot_H:
+                self._timer = threading.Timer(0.01, self._onTimerElapsed)
+                self._timer.start()
+            else:
+                self._eraseShot()
 
 
         def _drawShotBy(self, dx: int, dy: int):
             if self._x != None and self._y != None:
-                pygame.draw.rect(self._screen, self._backgroundColor, (self._x, self._y, 5, 20))
+                pygame.draw.rect(self._screen, self._backgroundColor, self._getShotCoordinates())
             self._x += dx
             self._y += dy
-            pygame.draw.rect(self._screen, self._color, (self._x, self._y, 5, 20))
+            pygame.draw.rect(self._screen, self._color, self._getShotCoordinates())
             pygame.display.flip()
 
 
@@ -210,8 +222,8 @@ class Spaceship(SpaceshipBase):
     COLOR = (51, 3, 231)
     SHOT_COLOR = (255, 248, 14)
 
-    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
-        super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR)
+    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, screenBorder_H: int):
+        super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR, screenBorder_H)
 
     def _calculateCoordinates(self, x: int, y: int, size: int) -> List[Tuple[int, int]]:
         a = (x,y)
@@ -224,8 +236,8 @@ class Invader(SpaceshipBase):
     COLOR = (99, 26, 143)
     SHOT_COLOR = (255, 248, 14)
 
-    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
-        super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR)
+    def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color, screenBorder_H: int):
+        super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR, screenBorder_H)
 
     def _calculateCoordinates(self, x: int, y: int, size: int) -> List[Tuple[int, int]]:
         a = (x,y)
