@@ -7,10 +7,12 @@ from typing import List, Tuple
 import math
 import threading
 import weakref
+import random
 
 class SpaceInvaders(GameBase):
     _spaceship = None
     _invader = None
+    _invaderSpot = None
 
     def __init__(self):
         super().__init__("Space Invaders")
@@ -18,9 +20,14 @@ class SpaceInvaders(GameBase):
         self._spaceship = Spaceship(self._screen, self.BACKGROUND_COLOR)
         self._spaceship.draw(692, 850)
         self._invader = Invader(self._screen, self.BACKGROUND_COLOR)
-        self._invader.draw(692, 100)
+        self._setInvaderSpot()
+        self._invader.draw(self._invaderSpot, 70)
         self._handleEvents()
     
+    def _setInvaderSpot(self):
+        self._invaderSpot = random.randint(self.BORDER_W, self._screen_width - (self.BORDER_W + Invader.SIZE))
+    
+
     def _moveSpaceshipRight(self):
         if self._spaceship.position[0] < self.maxRight - self._spaceship.size:
             self._spaceship.drawBy(1, 0)
@@ -43,6 +50,15 @@ class SpaceInvaders(GameBase):
                         self._moveSpaceshipLeft()
                     if event.key == pygame.K_SPACE:
                         self._spaceship.shoot()
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_i:
+                        if self._invaderSpot != None: 
+                            self._invader.erase()
+                        self._invader = None
+                        self._invader = Invader(self._screen, self.BACKGROUND_COLOR)
+                        self._invader.draw(self._invaderSpot, 70)
+                        self._setInvaderSpot()
+                       
 
 
 def _drawShot(s):
@@ -97,12 +113,15 @@ class SpaceshipBase():
 
     
     def draw(self, x: int, y: int):
-        if self._x != None and self._y != None:
-            self._drawSpaceship(self._x, self._y, self._backgroundColor)
+        self.erase()
         self._drawSpaceship(x, y, self._color)
         self._x = x
         self._y = y
         pygame.display.flip()
+
+    def erase(self):
+        if self._x != None and self._y != None:
+            self._drawSpaceship(self._x, self._y, self._backgroundColor)
 
     def drawBy(self, dx: int, dy: int):
         self.draw(self._x + dx, self._y + dy)
@@ -120,10 +139,7 @@ class SpaceshipBase():
 
     # returns list of points (pole bodů)
     def _calculateCoordinates(self, x: int, y: int, size: int) -> List[Tuple[int, int]]:
-        a = (x,y)
-        b = (x+size, y)
-        c = (x+size/2, y-math.sqrt(2)/2*size)
-        return [a, b, c]
+         raise Exception("Must be overridden in the derived class")
     
     def _calculateShotPosition(self) -> Tuple[int, int]:
         x = self._x + self._size/2
@@ -189,13 +205,25 @@ class Spaceship(SpaceshipBase):
     def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
         super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR)
 
+    def _calculateCoordinates(self, x: int, y: int, size: int) -> List[Tuple[int, int]]:
+        a = (x,y)
+        b = (x+size, y)
+        c = (x+size/2, y-math.sqrt(2)/2*size)
+        return [a, b, c]
+
 class Invader(SpaceshipBase):
     SIZE = 70
-    COLOR = (0, 128, 0)
+    COLOR = (99, 26, 143)
     SHOT_COLOR = (255, 248, 14)
 
     def __init__(self, screen: pygame.Surface, backgroundColor: pygame.Color):
         super().__init__(screen, backgroundColor, self.SIZE, self.COLOR, self.SHOT_COLOR)
+
+    def _calculateCoordinates(self, x: int, y: int, size: int) -> List[Tuple[int, int]]:
+        a = (x,y)
+        b = (x+size, y)
+        c = (x+size/2, y+math.sqrt(2)/2*size)
+        return [a, b, c]
                   
     
 
